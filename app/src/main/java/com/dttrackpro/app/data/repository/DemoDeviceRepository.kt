@@ -7,13 +7,6 @@ import kotlinx.coroutines.flow.flow
 import kotlin.math.*
 import kotlin.random.Random
 
-/**
- * Generates a small fleet driving looping routes around a center point, so
- * the map, list, and animation code can be built and demoed without a live
- * backend connection. Swap for RemoteDeviceRepository once your GpsWox-style
- * server is reachable — both implement the same DeviceRepository contract,
- * so no call-site changes are needed elsewhere in the app.
- */
 class DemoDeviceRepository(
     private val tickMs: Long = 3_000L
 ) : DeviceRepository {
@@ -48,7 +41,6 @@ class DemoDeviceRepository(
                 val angle = r.phase + (if (moving) t * (r.speedKmh / 40.0) else 0.0)
                 val lat = r.center.first + r.radiusDeg * sin(angle)
                 val lng = r.center.second + r.radiusDeg * cos(angle)
-                // course = tangent direction of travel around the loop
                 val course = ((Math.toDegrees(angle + PI / 2)) + 360) % 360
 
                 Device(
@@ -75,7 +67,7 @@ class DemoDeviceRepository(
                             odometerKm = 12000.0 + id * 3400 + t * 2,
                             engineHours = 812.5 + id * 40
                         ),
-                        locationValid = id != 5L || (t % 40 < 32), // device 5 periodically "goes offline"
+                        locationValid = id != 5L || (t % 40 < 32),
                         lastUpdate = "now",
                         address = "Near Route ${('A' + i.toInt())}, Zone ${i + 1}"
                     )
@@ -109,4 +101,10 @@ class DemoDeviceRepository(
         Geofence(id = 1, name = "Warehouse Zone", type = "circle", centerLat = 19.076, centerLng = 72.877, radiusMeters = 400.0, color = "#00D4D9"),
         Geofence(id = 2, name = "Restricted Yard", type = "circle", centerLat = 19.086, centerLng = 72.885, radiusMeters = 250.0, color = "#FF5C5C"),
     )
+
+    override suspend fun updateDevice(apiHash: String, deviceId: Long, name: String, icon: String) {
+    }
+
+    override suspend fun sendCommand(apiHash: String, deviceId: Long, command: String) {
+    }
 }

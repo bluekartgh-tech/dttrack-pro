@@ -1,4 +1,4 @@
-package com.dttrackpro.app.ui.screens.dashboard
+package com.dttrackpro.app.ui.main
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -10,21 +10,16 @@ import kotlinx.coroutines.launch
 
 enum class FleetFilter { ALL, MOVING, STOPPED, OFFLINE }
 
-data class DashboardUiState(
+data class FleetUiState(
     val devices: List<Device> = emptyList(),
     val query: String = "",
     val filter: FleetFilter = FleetFilter.ALL,
-    val selectedDeviceId: Long? = null,
-    val followSelected: Boolean = false,
-    val isListExpanded: Boolean = true,
+    val isLoading: Boolean = true,
 ) {
     val filteredDevices: List<Device>
         get() = devices
             .filter { filter == FleetFilter.ALL || it.data.status.matches(filter) }
             .filter { query.isBlank() || it.name.contains(query, ignoreCase = true) }
-
-    val selectedDevice: Device?
-        get() = devices.find { it.id == selectedDeviceId }
 
     val counts: Map<FleetFilter, Int>
         get() = mapOf(
@@ -33,6 +28,10 @@ data class DashboardUiState(
             FleetFilter.STOPPED to devices.count { it.data.status == DeviceStatus.STOPPED },
             FleetFilter.OFFLINE to devices.count { it.data.status == DeviceStatus.OFFLINE },
         )
+
+    val averageSpeed: Double
+        get() = devices.filter { it.data.status == DeviceStatus.MOVING }
+            .map { it.data.speed }.average().takeIf { !it.isNaN() } ?: 0.0
 }
 
 private fun DeviceStatus.matches(filter: FleetFilter) = when (filter) {
@@ -42,27 +41,34 @@ private fun DeviceStatus.matches(filter: FleetFilter) = when (filter) {
     FleetFilter.OFFLINE -> this == DeviceStatus.OFFLINE
 }
 
-class DashboardViewModel : ViewModel() {
+class FleetViewModel : ViewModel() {
 
-    private val _uiState = MutableStateFlow(DashboardUiState())
-    val uiState: StateFlow<DashboardUiState> = _uiState
+    private val _uiState = MutableStateFlow(FleetUiState())
+    val uiState: StateFlow<FleetUiState> = _uiState
 
     init {
         viewModelScope.launch {
             val hash = AppContainer.authRepository.sessionHash.firstOrNull() ?: "demo"
             AppContainer.deviceRepository.observeDevices(hash).collect { devices ->
-                _uiState.update { it.copy(devices = devices) }
+                _uiState.update { it.copy(devices = devices, isLoading = false) }
+            }
+        }
+    }
+
+    fun deviceById(id: Long): Device? = _uiState.value.devices.find { it.id == id }
+
+    fun updateVehicle(deviceId: Long, name: String, icon: String) {
+        viewModelScope.launch {
+            val hash = AppContainer.authRepository.sessionHash.firstOrNull() ?: "demo"
+            runCatching { AppContainer.deviceRepository.updateDevice(hash, deviceId, name, icon) }
+            _uiState.update { state ->
+                state.copy(devices = state.devices.map {
+                    if (it.id == deviceId) it.copy(name = name, icon = icon) else it
+                })
             }
         }
     }
 
     fun onQueryChange(v: String) = _uiState.update { it.copy(query = v) }
     fun onFilterChange(f: FleetFilter) = _uiState.update { it.copy(filter = f) }
-    fun onListExpandedChange(expanded: Boolean) = _uiState.update { it.copy(isListExpanded = expanded) }
-
-    fun selectDevice(id: Long?) = _uiState.update {
-        it.copy(selectedDeviceId = id, followSelected = id != null)
-    }
-
-    fun toggleFollow() = _uiState.update { it.copy(followSelected = !it.followSelected) }
 }

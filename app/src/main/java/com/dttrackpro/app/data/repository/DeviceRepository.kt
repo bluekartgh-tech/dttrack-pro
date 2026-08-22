@@ -9,19 +9,13 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 
 interface DeviceRepository {
-    /** Emits the full fleet list on an interval, matching GpsWox's polling model. */
     fun observeDevices(apiHash: String): Flow<List<Device>>
-
     suspend fun getHistory(apiHash: String, deviceId: Long, dateStart: String, dateEnd: String): List<TripPoint>
-
     suspend fun getGeofences(apiHash: String): List<Geofence>
+    suspend fun updateDevice(apiHash: String, deviceId: Long, name: String, icon: String)
+    suspend fun sendCommand(apiHash: String, deviceId: Long, command: String)
 }
 
-/**
- * Talks to the real backend. This is what you plug in once your GpsWox-style
- * server is reachable — just switch the binding in AppContainer from
- * DemoDeviceRepository to this class.
- */
 class RemoteDeviceRepository(
     private val api: GpsWoxApiService,
     private val pollIntervalMs: Long = 5_000L
@@ -45,4 +39,12 @@ class RemoteDeviceRepository(
 
     override suspend fun getGeofences(apiHash: String): List<Geofence> =
         api.getGeofences(apiHash).data.orEmpty()
+
+    override suspend fun updateDevice(apiHash: String, deviceId: Long, name: String, icon: String) {
+        api.updateDevice(apiHash, deviceId, name, icon)
+    }
+
+    override suspend fun sendCommand(apiHash: String, deviceId: Long, command: String) {
+        api.sendCommand(apiHash, deviceId, command)
+    }
 }

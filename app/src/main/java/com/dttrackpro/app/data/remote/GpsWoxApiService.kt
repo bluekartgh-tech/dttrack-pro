@@ -3,15 +3,6 @@ package com.dttrackpro.app.data.remote
 import com.dttrackpro.app.data.model.*
 import retrofit2.http.*
 
-/**
- * Retrofit contract for a GpsWox-style backend.
- *
- * GpsWox-family APIs typically authenticate via a `user_api_hash` issued
- * at login, then pass it as a query param on every subsequent call rather
- * than an Authorization header. This mirrors that pattern. If your backend
- * uses a Bearer token instead, swap the @Query("user_api_hash") params for
- * an interceptor-injected header (see ApiClient.kt) and drop them here.
- */
 interface GpsWoxApiService {
 
     @POST("api/login")
@@ -53,5 +44,22 @@ interface GpsWoxApiService {
         @Field("user_api_hash") apiHash: String,
         @Field("device_id") deviceId: Long,
         @Field("command") command: String
+    ): ApiEnvelope<Unit>
+
+    @FormUrlEncoded
+    @POST("api/device/update")
+    suspend fun updateDevice(
+        @Field("user_api_hash") apiHash: String,
+        @Field("device_id") deviceId: Long,
+        @Field("name") name: String,
+        @Field("icon") icon: String
+    ): ApiEnvelope<Unit>
+
+    @FormUrlEncoded
+    @POST("api/change_password")
+    suspend fun changePassword(
+        @Field("user_api_hash") apiHash: String,
+        @Field("old_password") oldPassword: String,
+        @Field("new_password") newPassword: String
     ): ApiEnvelope<Unit>
 }

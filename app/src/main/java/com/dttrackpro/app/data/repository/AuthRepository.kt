@@ -7,6 +7,7 @@ import androidx.datastore.preferences.preferencesDataStore
 import com.dttrackpro.app.data.model.LoginRequest
 import com.dttrackpro.app.data.remote.GpsWoxApiService
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 
 private val Context.dataStore by preferencesDataStore(name = "dttrack_session")
@@ -32,5 +33,13 @@ class AuthRepository(
 
     suspend fun logout() {
         context.dataStore.edit { it.clear() }
+    }
+
+    suspend fun changePassword(oldPassword: String, newPassword: String): Result<Unit> = runCatching {
+        val hash = sessionHash.first() ?: error("Not logged in")
+        val response = api.changePassword(hash, oldPassword, newPassword)
+        if (response.status != "success" && response.status != "ok") {
+            error(response.message ?: "Could not update password")
+        }
     }
 }

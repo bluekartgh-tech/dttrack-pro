@@ -1,79 +1,115 @@
 package com.dttrackpro.app.ui.screens.settings
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowBack
-import androidx.compose.material.icons.filled.Dns
-import androidx.compose.material.icons.filled.Logout
-import androidx.compose.material.icons.filled.Notifications
+import androidx.compose.material.icons.automirrored.filled.ArrowForwardIos
+import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.unit.dp
-import com.dttrackpro.app.BuildConfig
 import com.dttrackpro.app.AppContainer
+import com.dttrackpro.app.BuildConfig
 import com.dttrackpro.app.ui.theme.*
 import kotlinx.coroutines.launch
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SettingsScreen(
-    onBack: () -> Unit,
+    onOpenChangePassword: () -> Unit,
+    onOpenNotificationSettings: () -> Unit,
+    onOpenGeofences: () -> Unit,
+    onOpenVehicleManage: () -> Unit,
     onLoggedOut: () -> Unit,
 ) {
-    var notificationsEnabled by remember { mutableStateOf(true) }
     val scope = rememberCoroutineScope()
 
-    Scaffold(
-        containerColor = Graphite900,
-        topBar = {
-            TopAppBar(
-                title = { Text("Settings", color = Cloud100) },
-                navigationIcon = {
-                    IconButton(onClick = onBack) {
-                        Icon(Icons.Filled.ArrowBack, contentDescription = "Back", tint = Cloud100)
-                    }
-                },
-                colors = TopAppBarDefaults.topAppBarColors(containerColor = Graphite900)
-            )
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(Graphite900)
+            .statusBarsPadding()
+            .verticalScroll(rememberScrollState())
+            .padding(16.dp)
+    ) {
+        Text("Settings", style = MaterialTheme.typography.headlineSmall, color = Cloud100)
+        Spacer(Modifier.height(20.dp))
+
+        SectionLabel("Account")
+        SettingsNavRow(Icons.Filled.Lock, "Change password", "Update your login credentials", onOpenChangePassword)
+
+        Spacer(Modifier.height(20.dp))
+        SectionLabel("Fleet")
+        SettingsNavRow(Icons.Filled.Notifications, "Notifications", "Geofence, ignition, and offline alerts", onOpenNotificationSettings)
+        Spacer(Modifier.height(8.dp))
+        SettingsNavRow(Icons.Filled.Map, "Geofences", "Create and manage zones", onOpenGeofences)
+        Spacer(Modifier.height(8.dp))
+        SettingsNavRow(Icons.Filled.DirectionsCar, "Manage vehicles", "Rename vehicles and change icons", onOpenVehicleManage)
+
+        Spacer(Modifier.height(20.dp))
+        SectionLabel("System")
+        SettingsInfoRow(Icons.Filled.Dns, "Backend server", BuildConfig.API_BASE_URL)
+
+        Spacer(Modifier.height(28.dp))
+
+        Button(
+            onClick = {
+                scope.launch {
+                    AppContainer.authRepository.logout()
+                    onLoggedOut()
+                }
+            },
+            modifier = Modifier.fillMaxWidth().height(48.dp),
+            colors = ButtonDefaults.buttonColors(containerColor = Graphite700, contentColor = DangerCoral)
+        ) {
+            Icon(Icons.Filled.Logout, contentDescription = null, modifier = Modifier.size(18.dp))
+            Spacer(Modifier.width(8.dp))
+            Text("Log out")
         }
-    ) { padding ->
-        Column(modifier = Modifier.fillMaxSize().padding(padding).padding(16.dp)) {
 
-            SettingsRow(icon = Icons.Filled.Dns, title = "Backend server", subtitle = BuildConfig.API_BASE_URL)
-
-            SettingsSwitchRow(
-                icon = Icons.Filled.Notifications,
-                title = "Push notifications",
-                subtitle = "Alerts for geofence entry/exit, ignition, and low battery",
-                checked = notificationsEnabled,
-                onCheckedChange = { notificationsEnabled = it }
-            )
-
-            Spacer(Modifier.height(24.dp))
-
-            Button(
-                onClick = {
-                    scope.launch {
-                        AppContainer.authRepository.logout()
-                        onLoggedOut()
-                    }
-                },
-                modifier = Modifier.fillMaxWidth().height(48.dp),
-                colors = ButtonDefaults.buttonColors(containerColor = Graphite700, contentColor = DangerCoral)
-            ) {
-                Icon(Icons.Filled.Logout, contentDescription = null, modifier = Modifier.size(18.dp))
-                Spacer(Modifier.width(8.dp))
-                Text("Log out")
-            }
-        }
+        Spacer(Modifier.height(24.dp))
     }
 }
 
 @Composable
-private fun SettingsRow(icon: androidx.compose.ui.graphics.vector.ImageVector, title: String, subtitle: String) {
+private fun SectionLabel(text: String) {
+    Text(text.uppercase(), style = MaterialTheme.typography.labelSmall, color = Slate500)
+    Spacer(Modifier.height(8.dp))
+}
+
+@Composable
+private fun SettingsNavRow(icon: ImageVector, title: String, subtitle: String, onClick: () -> Unit) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .background(Graphite800, MaterialTheme.shapes.medium)
+            .clickable(onClick = onClick)
+            .padding(16.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Icon(icon, contentDescription = null, tint = SignalCyan)
+        Spacer(Modifier.width(14.dp))
+        Column(modifier = Modifier.weight(1f)) {
+            Text(title, style = MaterialTheme.typography.titleSmall, color = Cloud100)
+            Text(subtitle, style = MaterialTheme.typography.bodyMedium, color = Slate500)
+        }
+        Icon(
+            Icons.AutoMirrored.Filled.ArrowForwardIos,
+            contentDescription = null,
+            tint = Slate500,
+            modifier = Modifier.size(14.dp)
+        )
+    }
+}
+
+@Composable
+private fun SettingsInfoRow(icon: ImageVector, title: String, subtitle: String) {
     Row(
         modifier = Modifier.fillMaxWidth().background(Graphite800, MaterialTheme.shapes.medium).padding(16.dp),
         verticalAlignment = Alignment.CenterVertically
@@ -84,32 +120,5 @@ private fun SettingsRow(icon: androidx.compose.ui.graphics.vector.ImageVector, t
             Text(title, style = MaterialTheme.typography.titleSmall, color = Cloud100)
             Text(subtitle, style = MaterialTheme.typography.bodyMedium, color = Slate500)
         }
-    }
-    Spacer(Modifier.height(10.dp))
-}
-
-@Composable
-private fun SettingsSwitchRow(
-    icon: androidx.compose.ui.graphics.vector.ImageVector,
-    title: String,
-    subtitle: String,
-    checked: Boolean,
-    onCheckedChange: (Boolean) -> Unit,
-) {
-    Row(
-        modifier = Modifier.fillMaxWidth().background(Graphite800, MaterialTheme.shapes.medium).padding(16.dp),
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        Icon(icon, contentDescription = null, tint = SignalCyan)
-        Spacer(Modifier.width(14.dp))
-        Column(modifier = Modifier.weight(1f)) {
-            Text(title, style = MaterialTheme.typography.titleSmall, color = Cloud100)
-            Text(subtitle, style = MaterialTheme.typography.bodyMedium, color = Slate500)
-        }
-        Switch(
-            checked = checked,
-            onCheckedChange = onCheckedChange,
-            colors = SwitchDefaults.colors(checkedTrackColor = SignalCyan, checkedThumbColor = Graphite900)
-        )
     }
 }

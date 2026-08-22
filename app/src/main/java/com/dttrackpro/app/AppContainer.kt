@@ -7,13 +7,9 @@ import com.dttrackpro.app.data.repository.DemoDeviceRepository
 import com.dttrackpro.app.data.repository.DeviceRepository
 import com.dttrackpro.app.data.repository.RemoteDeviceRepository
 
-/**
- * Lightweight service locator. Flip USE_DEMO_DATA to false once your
- * GpsWox-style backend is live and reachable at BuildConfig.API_BASE_URL.
- */
 object AppContainer {
 
-    const val USE_DEMO_DATA = true
+    const val USE_DEMO_DATA = false
 
     lateinit var authRepository: AuthRepository
         private set

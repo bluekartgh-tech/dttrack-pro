@@ -4,16 +4,19 @@ import androidx.compose.animation.*
 import androidx.compose.animation.core.tween
 import androidx.compose.runtime.Composable
 import androidx.navigation.NavHostController
+import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
-import androidx.navigation.NavType
-import com.dttrackpro.app.ui.screens.dashboard.DashboardScreen
+import androidx.navigation.navDeepLink
+import com.dttrackpro.app.ui.main.MainScaffoldScreen
 import com.dttrackpro.app.ui.screens.geofence.GeofenceScreen
-import com.dttrackpro.app.ui.screens.history.HistoryScreen
+import com.dttrackpro.app.ui.screens.livetracking.LiveTrackingScreen
 import com.dttrackpro.app.ui.screens.login.LoginScreen
-import com.dttrackpro.app.ui.screens.settings.SettingsScreen
+import com.dttrackpro.app.ui.screens.settings.ChangePasswordScreen
+import com.dttrackpro.app.ui.screens.settings.NotificationSettingsScreen
+import com.dttrackpro.app.ui.screens.settings.VehicleManageScreen
 
 @Composable
 fun DTTrackNavGraph(navController: NavHostController = rememberNavController()) {
@@ -27,40 +30,49 @@ fun DTTrackNavGraph(navController: NavHostController = rememberNavController()) 
     ) {
         composable(Screen.Login.route) {
             LoginScreen(onLoggedIn = {
-                navController.navigate(Screen.Dashboard.route) {
+                navController.navigate(Screen.Main.route) {
                     popUpTo(Screen.Login.route) { inclusive = true }
                 }
             })
         }
 
-        composable(Screen.Dashboard.route) {
-            DashboardScreen(
-                onOpenHistory = { deviceId -> navController.navigate(Screen.History.of(deviceId)) },
+        composable(Screen.Main.route) {
+            MainScaffoldScreen(
+                onVehicleTapped = { deviceId -> navController.navigate(Screen.LiveTracking.of(deviceId)) },
+                onOpenChangePassword = { navController.navigate(Screen.ChangePassword.route) },
+                onOpenNotificationSettings = { navController.navigate(Screen.NotificationSettings.route) },
                 onOpenGeofences = { navController.navigate(Screen.Geofences.route) },
-                onOpenSettings = { navController.navigate(Screen.Settings.route) },
-            )
-        }
-
-        composable(
-            route = Screen.History.route,
-            arguments = listOf(navArgument("deviceId") { type = NavType.LongType })
-        ) {
-            HistoryScreen(onBack = { navController.popBackStack() })
-        }
-
-        composable(Screen.Geofences.route) {
-            GeofenceScreen(onBack = { navController.popBackStack() })
-        }
-
-        composable(Screen.Settings.route) {
-            SettingsScreen(
-                onBack = { navController.popBackStack() },
+                onOpenVehicleManage = { navController.navigate(Screen.VehicleManage.route) },
                 onLoggedOut = {
                     navController.navigate(Screen.Login.route) {
                         popUpTo(0)
                     }
                 }
             )
+        }
+
+        composable(
+            route = Screen.LiveTracking.route,
+            arguments = listOf(navArgument("deviceId") { type = NavType.LongType }),
+            deepLinks = listOf(navDeepLink { uriPattern = "dttrackpro://track/{deviceId}" })
+        ) {
+            LiveTrackingScreen(onBack = { navController.popBackStack() })
+        }
+
+        composable(Screen.Geofences.route) {
+            GeofenceScreen(onBack = { navController.popBackStack() })
+        }
+
+        composable(Screen.ChangePassword.route) {
+            ChangePasswordScreen(onBack = { navController.popBackStack() })
+        }
+
+        composable(Screen.NotificationSettings.route) {
+            NotificationSettingsScreen(onBack = { navController.popBackStack() })
+        }
+
+        composable(Screen.VehicleManage.route) {
+            VehicleManageScreen(onBack = { navController.popBackStack() })
         }
     }
 }
