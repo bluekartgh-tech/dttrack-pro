@@ -5,8 +5,9 @@ import retrofit2.http.*
 
 interface GpsWoxApiService {
 
+    @FormUrlEncoded
     @POST("api/login")
-    suspend fun login(@Body body: LoginRequest): LoginResponse
+    suspend fun login(@Field("email") email: String, @Field("password") password: String): LoginResponse
 
     @GET("api/get_devices")
     suspend fun getDevices(

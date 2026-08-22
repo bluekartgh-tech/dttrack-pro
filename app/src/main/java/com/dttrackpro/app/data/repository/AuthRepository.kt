@@ -22,7 +22,7 @@ class AuthRepository(
     val userName: Flow<String?> = context.dataStore.data.map { it[KEY_USER_NAME] }
 
     suspend fun login(email: String, password: String): Result<String> = runCatching {
-        val response = api.login(LoginRequest(email, password))
+        val response = api.login(email, password)
         val hash = response.userApiHash ?: error(response.message ?: "Login failed")
         context.dataStore.edit {
             it[KEY_API_HASH] = hash
