@@ -16,7 +16,7 @@ android {
 
         // Base URL of your GpsWox-style backend.
         // Override per build type below, or move to local.properties for real secrets.
-        buildConfigField("String", "API_BASE_URL", "\"https://your-gpswox-backend.example.com/\"")
+        buildConfigField("String", "API_BASE_URL", "\"https://app.dttrack.com/\"")
     }
 
     buildTypes {
@@ -25,7 +25,7 @@ android {
             proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
         }
         debug {
-            buildConfigField("String", "API_BASE_URL", "\"https://your-gpswox-backend.example.com/\"")
+            buildConfigField("String", "API_BASE_URL", "\"https://app.dttrack.com/\"")
         }
     }
 
