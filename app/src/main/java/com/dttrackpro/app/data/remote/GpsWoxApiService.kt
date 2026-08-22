@@ -7,12 +7,15 @@ interface GpsWoxApiService {
 
     @FormUrlEncoded
     @POST("api/login")
-    suspend fun login(@Field("email") email: String, @Field("password") password: String): LoginResponse
+    suspend fun login(
+        @Field("email") email: String,
+        @Field("password") password: String
+    ): LoginResponse
 
     @GET("api/get_devices")
     suspend fun getDevices(
         @Query("user_api_hash") apiHash: String
-    ): ApiEnvelope<List<Device>>
+    ): List<DeviceGroup>
 
     @GET("api/get_device_data")
     suspend fun getDeviceData(
