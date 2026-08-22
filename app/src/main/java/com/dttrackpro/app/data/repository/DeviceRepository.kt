@@ -23,8 +23,10 @@ class RemoteDeviceRepository(
 
     override fun observeDevices(apiHash: String): Flow<List<Device>> = flow {
         while (true) {
-            runCatching { api.getDevices(apiHash).data.orEmpty() }
-                .onSuccess { emit(it) }
+            runCatching {
+                val groups = api.getDevices(apiHash)
+                groups.flatMap { it.items }
+            }.onSuccess { emit(it) }
             delay(pollIntervalMs)
         }
     }
