@@ -1,6 +1,7 @@
 package com.dttrackpro.app.data.repository
 
 import com.dttrackpro.app.data.model.Device
+import com.dttrackpro.app.data.model.DeviceGroup
 import com.dttrackpro.app.data.model.Geofence
 import com.dttrackpro.app.data.model.TripPoint
 import com.dttrackpro.app.data.remote.GpsWoxApiService
@@ -24,9 +25,11 @@ class RemoteDeviceRepository(
     override fun observeDevices(apiHash: String): Flow<List<Device>> = flow {
         while (true) {
             runCatching {
-                val groups = api.getDevices(apiHash)
-                groups.flatMap { it.items }
-            }.onSuccess { emit(it) }
+                val groups: List<DeviceGroup> = api.getDevices(apiHash)
+                groups.flatMap { group -> group.items }
+            }.onSuccess { devices ->
+                emit(devices)
+            }
             delay(pollIntervalMs)
         }
     }

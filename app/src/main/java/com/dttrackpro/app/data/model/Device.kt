@@ -11,7 +11,7 @@ data class DeviceGroup(
 data class Device(
     @SerializedName("id") val id: Long,
     @SerializedName("name") val name: String,
-    @SerializedName("imei") val imei: String? = "",
+    @SerializedName("imei") val imei: String = "",
     @SerializedName("icon") val icon: String? = null,
     @SerializedName("protocol") val protocol: String? = null,
     @SerializedName("sim_number") val simNumber: String? = null,
