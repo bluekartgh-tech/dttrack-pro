@@ -1,20 +1,33 @@
 package com.dttrackpro.app.data.repository
 
 import com.dttrackpro.app.data.model.Device
-import com.dttrackpro.app.data.model.DeviceGroup
 import com.dttrackpro.app.data.model.Geofence
 import com.dttrackpro.app.data.model.TripPoint
 import com.dttrackpro.app.data.remote.GpsWoxApiService
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
+import retrofit2.HttpException
+import java.io.IOException
 
 interface DeviceRepository {
-    fun observeDevices(apiHash: String): Flow<List<Device>>
+    fun observeDevices(apiHash: String): Flow<Result<List<Device>>>
     suspend fun getHistory(apiHash: String, deviceId: Long, dateStart: String, dateEnd: String): List<TripPoint>
     suspend fun getGeofences(apiHash: String): List<Geofence>
     suspend fun updateDevice(apiHash: String, deviceId: Long, name: String, icon: String)
     suspend fun sendCommand(apiHash: String, deviceId: Long, command: String)
+    suspend fun createGeofence(apiHash: String, name: String, lat: Double, lng: Double, radiusMeters: Double)
+}
+
+private suspend fun <T> safeCall(block: suspend () -> T): Result<T> = try {
+    Result.success(block())
+} catch (e: HttpException) {
+    val body = runCatching { e.response()?.errorBody()?.string() }.getOrNull()
+    Result.failure(Exception("HTTP ${e.code()}${if (!body.isNullOrBlank()) ": $body" else ": ${e.message()}"}"))
+} catch (e: IOException) {
+    Result.failure(Exception("Network error — check the server URL and your connection (${e.message})"))
+} catch (e: Exception) {
+    Result.failure(e)
 }
 
 class RemoteDeviceRepository(
@@ -22,14 +35,9 @@ class RemoteDeviceRepository(
     private val pollIntervalMs: Long = 5_000L
 ) : DeviceRepository {
 
-    override fun observeDevices(apiHash: String): Flow<List<Device>> = flow {
+    override fun observeDevices(apiHash: String): Flow<Result<List<Device>>> = flow {
         while (true) {
-            runCatching {
-                val groups: List<DeviceGroup> = api.getDevices(apiHash)
-                groups.flatMap { group -> group.items }
-            }.onSuccess { devices ->
-                emit(devices)
-            }
+            emit(safeCall { api.getDevices(apiHash).data.orEmpty() })
             delay(pollIntervalMs)
         }
     }
@@ -51,5 +59,12 @@ class RemoteDeviceRepository(
 
     override suspend fun sendCommand(apiHash: String, deviceId: Long, command: String) {
         api.sendCommand(apiHash, deviceId, command)
+    }
+
+    override suspend fun createGeofence(apiHash: String, name: String, lat: Double, lng: Double, radiusMeters: Double) {
+        api.createGeofence(
+            apiHash,
+            Geofence(id = 0, name = name, type = "circle", centerLat = lat, centerLng = lng, radiusMeters = radiusMeters)
+        )
     }
 }
