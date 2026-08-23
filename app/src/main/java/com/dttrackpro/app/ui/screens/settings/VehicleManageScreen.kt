@@ -16,6 +16,7 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.dttrackpro.app.data.model.Device
+import com.dttrackpro.app.ui.components.dtCard
 import com.dttrackpro.app.ui.main.FleetViewModel
 import com.dttrackpro.app.ui.theme.*
 import kotlinx.coroutines.launch
@@ -52,7 +53,7 @@ fun VehicleManageScreen(
         ) {
             items(state.devices, key = { it.id }) { device ->
                 Row(
-                    modifier = Modifier.fillMaxWidth().background(Graphite800, MaterialTheme.shapes.medium).padding(16.dp),
+                    modifier = Modifier.fillMaxWidth().dtCard().padding(16.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Icon(iconFor(device.icon), contentDescription = null, tint = SignalCyan)

@@ -5,12 +5,15 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ErrorOutline
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.dttrackpro.app.ui.components.DeviceListItem
+import com.dttrackpro.app.ui.components.dtCard
 import com.dttrackpro.app.ui.main.FleetFilter
 import com.dttrackpro.app.ui.main.FleetViewModel
 import com.dttrackpro.app.ui.theme.*
@@ -63,8 +66,28 @@ fun VehiclesScreen(
             }
         }
 
+        if (state.errorMessage != null) {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp)
+                    .dtCard(fill = DangerCoral.copy(alpha = 0.12f))
+                    .padding(14.dp),
+                verticalAlignment = Alignment.Top
+            ) {
+                Icon(Icons.Filled.ErrorOutline, contentDescription = null, tint = DangerCoral, modifier = Modifier.size(20.dp))
+                Spacer(Modifier.width(10.dp))
+                Column {
+                    Text("Couldn't load vehicles", style = MaterialTheme.typography.titleSmall, color = Cloud100)
+                    Spacer(Modifier.height(2.dp))
+                    Text(state.errorMessage ?: "", style = MaterialTheme.typography.bodyMedium, color = Slate300)
+                }
+            }
+            Spacer(Modifier.height(12.dp))
+        }
+
         if (state.isLoading) {
-            Box(Modifier.fillMaxWidth().padding(32.dp), contentAlignment = androidx.compose.ui.Alignment.Center) {
+            Box(Modifier.fillMaxWidth().padding(32.dp), contentAlignment = Alignment.Center) {
                 CircularProgressIndicator(color = SignalCyan)
             }
         }
@@ -77,7 +100,7 @@ fun VehiclesScreen(
             items(state.filteredDevices, key = { it.id }) { device ->
                 DeviceListItem(device = device, isSelected = false, onClick = { onVehicleTapped(device.id) })
             }
-            if (!state.isLoading && state.filteredDevices.isEmpty()) {
+            if (!state.isLoading && state.errorMessage == null && state.filteredDevices.isEmpty()) {
                 item {
                     Text(
                         "No vehicles found. Check that your fleet has GPS units reporting to the server.",

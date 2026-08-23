@@ -15,6 +15,7 @@ data class FleetUiState(
     val query: String = "",
     val filter: FleetFilter = FleetFilter.ALL,
     val isLoading: Boolean = true,
+    val errorMessage: String? = null,
 ) {
     val filteredDevices: List<Device>
         get() = devices
@@ -49,8 +50,14 @@ class FleetViewModel : ViewModel() {
     init {
         viewModelScope.launch {
             val hash = AppContainer.authRepository.sessionHash.firstOrNull() ?: "demo"
-            AppContainer.deviceRepository.observeDevices(hash).collect { devices ->
-                _uiState.update { it.copy(devices = devices, isLoading = false) }
+            AppContainer.deviceRepository.observeDevices(hash).collect { result: Result<List<Device>> ->
+                if (result.isSuccess) {
+                    val devices: List<Device> = result.getOrDefault(emptyList())
+                    _uiState.update { state -> state.copy(devices = devices, isLoading = false, errorMessage = null) }
+                } else {
+                    val message: String = result.exceptionOrNull()?.message ?: "Could not load vehicles"
+                    _uiState.update { state -> state.copy(isLoading = false, errorMessage = message) }
+                }
             }
         }
     }

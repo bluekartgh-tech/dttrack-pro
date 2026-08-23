@@ -11,6 +11,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.unit.dp
+import com.dttrackpro.app.ui.components.dtCard
+import com.dttrackpro.app.ui.components.dtSwitchColors
 import com.dttrackpro.app.ui.theme.*
 
 private data class NotificationToggle(
@@ -60,7 +62,7 @@ fun NotificationSettingsScreen(onBack: () -> Unit) {
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .background(Graphite800, MaterialTheme.shapes.medium)
+                        .dtCard()
                         .padding(16.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
@@ -73,7 +75,7 @@ fun NotificationSettingsScreen(onBack: () -> Unit) {
                     Switch(
                         checked = toggles[item.key] == true,
                         onCheckedChange = { toggles[item.key] = it },
-                        colors = SwitchDefaults.colors(checkedTrackColor = SignalCyan, checkedThumbColor = Graphite900)
+                        colors = dtSwitchColors()
                     )
                 }
                 Spacer(Modifier.height(10.dp))

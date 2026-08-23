@@ -17,6 +17,7 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.unit.dp
 import com.dttrackpro.app.AppContainer
 import com.dttrackpro.app.BuildConfig
+import com.dttrackpro.app.ui.components.dtCard
 import com.dttrackpro.app.ui.theme.*
 import kotlinx.coroutines.launch
 
@@ -88,7 +89,7 @@ private fun SettingsNavRow(icon: ImageVector, title: String, subtitle: String, o
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .background(Graphite800, MaterialTheme.shapes.medium)
+            .dtCard()
             .clickable(onClick = onClick)
             .padding(16.dp),
         verticalAlignment = Alignment.CenterVertically
@@ -111,7 +112,7 @@ private fun SettingsNavRow(icon: ImageVector, title: String, subtitle: String, o
 @Composable
 private fun SettingsInfoRow(icon: ImageVector, title: String, subtitle: String) {
     Row(
-        modifier = Modifier.fillMaxWidth().background(Graphite800, MaterialTheme.shapes.medium).padding(16.dp),
+        modifier = Modifier.fillMaxWidth().dtCard().padding(16.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
         Icon(icon, contentDescription = null, tint = SignalCyan)

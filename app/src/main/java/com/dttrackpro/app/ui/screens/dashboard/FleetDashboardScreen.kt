@@ -23,6 +23,7 @@ import androidx.compose.ui.unit.dp
 import com.dttrackpro.app.data.model.DeviceStatus
 import com.dttrackpro.app.ui.components.DonutSlice
 import com.dttrackpro.app.ui.components.StatDonut
+import com.dttrackpro.app.ui.components.dtCard
 import com.dttrackpro.app.ui.main.FleetViewModel
 import com.dttrackpro.app.ui.theme.*
 
@@ -55,7 +56,7 @@ fun FleetDashboardScreen(
         Spacer(Modifier.height(20.dp))
 
         Row(
-            modifier = Modifier.fillMaxWidth().background(Graphite800, MaterialTheme.shapes.large).padding(16.dp),
+            modifier = Modifier.fillMaxWidth().dtCard().padding(16.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
             StatDonut(
@@ -86,7 +87,7 @@ fun FleetDashboardScreen(
         val offlineDevices = state.devices.filter { it.data.status == DeviceStatus.OFFLINE }
         if (offlineDevices.isEmpty()) {
             Row(
-                modifier = Modifier.fillMaxWidth().background(Graphite800, MaterialTheme.shapes.medium).padding(16.dp),
+                modifier = Modifier.fillMaxWidth().dtCard().padding(16.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Icon(Icons.Filled.WifiTethering, contentDescription = null, tint = OnlineGreen)
@@ -98,7 +99,7 @@ fun FleetDashboardScreen(
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .background(Graphite800, MaterialTheme.shapes.medium)
+                        .dtCard()
                         .clickable { onVehicleTapped(device.id) }
                         .padding(16.dp),
                     verticalAlignment = Alignment.CenterVertically
@@ -121,7 +122,7 @@ fun FleetDashboardScreen(
 @Composable
 private fun StatTile(icon: ImageVector, label: String, value: String, modifier: Modifier = Modifier) {
     Column(
-        modifier = modifier.background(Graphite800, MaterialTheme.shapes.large).padding(16.dp)
+        modifier = modifier.dtCard().padding(16.dp)
     ) {
         Icon(icon, contentDescription = null, tint = SignalCyan, modifier = Modifier.size(20.dp))
         Spacer(Modifier.height(10.dp))

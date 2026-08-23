@@ -37,9 +37,11 @@ class LiveTrackingViewModel(savedStateHandle: SavedStateHandle) : ViewModel() {
     init {
         viewModelScope.launch {
             val hash = AppContainer.authRepository.sessionHash.firstOrNull() ?: "demo"
-            AppContainer.deviceRepository.observeDevices(hash).collect { devices ->
-                devices.find { it.id == deviceId }?.let { d ->
-                    _uiState.update { it.copy(device = d) }
+            AppContainer.deviceRepository.observeDevices(hash).collect { result: Result<List<Device>> ->
+                val devices: List<Device> = result.getOrDefault(emptyList())
+                val found: Device? = devices.find { device -> device.id == deviceId }
+                if (found != null) {
+                    _uiState.update { state -> state.copy(device = found) }
                 }
             }
         }
