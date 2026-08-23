@@ -19,15 +19,19 @@ interface DeviceRepository {
     suspend fun createGeofence(apiHash: String, name: String, lat: Double, lng: Double, radiusMeters: Double)
 }
 
-private suspend fun <T> safeCall(block: suspend () -> T): Result<T> = try {
-    Result.success(block())
-} catch (e: HttpException) {
-    val body = runCatching { e.response()?.errorBody()?.string() }.getOrNull()
-    Result.failure(Exception("HTTP ${e.code()}${if (!body.isNullOrBlank()) ": $body" else ": ${e.message()}"}"))
-} catch (e: IOException) {
-    Result.failure(Exception("Network error — check the server URL and your connection (${e.message})"))
-} catch (e: Exception) {
-    Result.failure(e)
+private suspend fun <T> safeCall(block: suspend () -> T): Result<T> {
+    return try {
+        val value: T = block()
+        Result.success(value)
+    } catch (e: HttpException) {
+        val body: String? = try { e.response()?.errorBody()?.string() } catch (inner: Exception) { null }
+        val message: String = if (!body.isNullOrBlank()) "HTTP ${e.code()}: $body" else "HTTP ${e.code()}: ${e.message()}"
+        Result.failure(Exception(message))
+    } catch (e: IOException) {
+        Result.failure(Exception("Network error — check the server URL and your connection (${e.message})"))
+    } catch (e: Exception) {
+        Result.failure(e)
+    }
 }
 
 class RemoteDeviceRepository(
@@ -37,7 +41,12 @@ class RemoteDeviceRepository(
 
     override fun observeDevices(apiHash: String): Flow<Result<List<Device>>> = flow {
         while (true) {
-            emit(safeCall { api.getDevices(apiHash).data.orEmpty() })
+            val result: Result<List<Device>> = safeCall {
+                val envelope = api.getDevices(apiHash)
+                val list: List<Device>? = envelope.data
+                list ?: emptyList()
+            }
+            emit(result)
             delay(pollIntervalMs)
         }
     }
@@ -47,11 +56,15 @@ class RemoteDeviceRepository(
         deviceId: Long,
         dateStart: String,
         dateEnd: String
-    ): List<TripPoint> =
-        api.getHistory(apiHash, deviceId, dateStart, dateEnd).data.orEmpty()
+    ): List<TripPoint> {
+        val envelope = api.getHistory(apiHash, deviceId, dateStart, dateEnd)
+        return envelope.data ?: emptyList()
+    }
 
-    override suspend fun getGeofences(apiHash: String): List<Geofence> =
-        api.getGeofences(apiHash).data.orEmpty()
+    override suspend fun getGeofences(apiHash: String): List<Geofence> {
+        val envelope = api.getGeofences(apiHash)
+        return envelope.data ?: emptyList()
+    }
 
     override suspend fun updateDevice(apiHash: String, deviceId: Long, name: String, icon: String) {
         api.updateDevice(apiHash, deviceId, name, icon)
@@ -62,9 +75,7 @@ class RemoteDeviceRepository(
     }
 
     override suspend fun createGeofence(apiHash: String, name: String, lat: Double, lng: Double, radiusMeters: Double) {
-        api.createGeofence(
-            apiHash,
-            Geofence(id = 0, name = name, type = "circle", centerLat = lat, centerLng = lng, radiusMeters = radiusMeters)
-        )
+        val fence = Geofence(id = 0, name = name, type = "circle", centerLat = lat, centerLng = lng, radiusMeters = radiusMeters)
+        api.createGeofence(apiHash, fence)
     }
 }
