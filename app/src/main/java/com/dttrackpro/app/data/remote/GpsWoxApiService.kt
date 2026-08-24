@@ -15,7 +15,7 @@ interface GpsWoxApiService {
     @GET("api/get_devices")
     suspend fun getDevices(
         @Query("user_api_hash") apiHash: String
-    ): ApiEnvelope<List<Device>>
+    ): List<DeviceGroup>
 
     @GET("api/get_device_data")
     suspend fun getDeviceData(
