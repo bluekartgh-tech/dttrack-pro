@@ -8,7 +8,7 @@ data class LoginRequest(
 )
 
 data class LoginResponse(
-    @SerializedName("status") val status: String,
+    @SerializedName("status") val status: Int,
     @SerializedName("message") val message: String? = null,
     @SerializedName("user_api_hash") val userApiHash: String?,
     @SerializedName("user") val user: UserProfile?
@@ -21,7 +21,7 @@ data class UserProfile(
 )
 
 data class ApiEnvelope<T>(
-    @SerializedName("status") val status: String,
+    @SerializedName("status") val status: Int,
     @SerializedName("message") val message: String? = null,
     @SerializedName("data") val data: T? = null
 )
