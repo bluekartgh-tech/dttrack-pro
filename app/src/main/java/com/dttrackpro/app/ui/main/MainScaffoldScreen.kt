@@ -65,9 +65,9 @@ fun MainScaffoldScreen(
     ) { padding ->
         Box(modifier = Modifier.fillMaxSize().padding(bottom = padding.calculateBottomPadding())) {
             when (selectedTab) {
-                MainTab.VEHICLES -> VehiclesScreen(fleetViewModel = fleetViewModel, onVehicleTapped = onVehicleTapped)
-                MainTab.MAP -> MapScreen(fleetViewModel = fleetViewModel, onVehicleTapped = onVehicleTapped)
-                MainTab.DASHBOARD -> FleetDashboardScreen(fleetViewModel = fleetViewModel, onVehicleTapped = onVehicleTapped)
+                MainTab.VEHICLES -> VehiclesScreen(fleetViewModel = fleetViewModel, onVehicleTapped = onVehicleTapped, onBellClick = onOpenNotificationSettings)
+                MainTab.MAP -> MapScreen(fleetViewModel = fleetViewModel, onVehicleTapped = onVehicleTapped, onBellClick = onOpenNotificationSettings)
+                MainTab.DASHBOARD -> FleetDashboardScreen(fleetViewModel = fleetViewModel, onVehicleTapped = onVehicleTapped, onBellClick = onOpenNotificationSettings)
                 MainTab.SETTINGS -> SettingsScreen(
                     onOpenChangePassword = onOpenChangePassword,
                     onOpenNotificationSettings = onOpenNotificationSettings,

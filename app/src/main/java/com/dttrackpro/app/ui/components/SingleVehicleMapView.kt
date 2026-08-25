@@ -51,7 +51,7 @@ fun SingleVehicleMapView(
             MapView(ctx).apply {
                 setTileSource(TileSourceFactory.MAPNIK)
                 setMultiTouchControls(true)
-                controller.setZoom(16.0)
+                controller.setZoom(17.5)
                 overlays.add(trailOverlay)
                 mapViewRef.value = this
             }

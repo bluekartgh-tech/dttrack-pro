@@ -21,6 +21,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.unit.dp
 import com.dttrackpro.app.data.model.DeviceStatus
+import com.dttrackpro.app.ui.components.DTTopBar
 import com.dttrackpro.app.ui.components.DonutSlice
 import com.dttrackpro.app.ui.components.StatDonut
 import com.dttrackpro.app.ui.components.dtCard
@@ -31,6 +32,7 @@ import com.dttrackpro.app.ui.theme.*
 fun FleetDashboardScreen(
     fleetViewModel: FleetViewModel,
     onVehicleTapped: (Long) -> Unit,
+    onBellClick: () -> Unit,
 ) {
     val state by fleetViewModel.uiState.collectAsState()
     val moving = state.counts[com.dttrackpro.app.ui.main.FleetFilter.MOVING] ?: 0
@@ -42,12 +44,10 @@ fun FleetDashboardScreen(
             .fillMaxSize()
             .background(Graphite900)
             .verticalScroll(rememberScrollState())
-            .statusBarsPadding()
-            .padding(16.dp)
     ) {
-        Text("Fleet overview", style = MaterialTheme.typography.headlineSmall, color = Cloud100)
-        Spacer(Modifier.height(16.dp))
+        DTTopBar(title = "Fleet overview", onBellClick = onBellClick)
 
+        Column(modifier = Modifier.padding(horizontal = 16.dp)) {
         Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
             StatTile(Icons.Filled.DirectionsCar, "Total vehicles", state.devices.size.toString(), Modifier.weight(1f))
             StatTile(Icons.Filled.Speed, "Avg speed (moving)", "${state.averageSpeed.toInt()} km/h", Modifier.weight(1f))
@@ -116,6 +116,7 @@ fun FleetDashboardScreen(
         }
 
         Spacer(Modifier.height(24.dp))
+        }
     }
 }
 

@@ -41,7 +41,7 @@ class RemoteDeviceRepository(
         while (true) {
             val result: Result<List<Device>> = safeCall {
                 val groups: List<DeviceGroup> = api.getDevices(apiHash)
-                groups.flatMap { group -> group.items }.map { remote -> remote.toDevice() }
+                groups.flatMap { group -> group.items.orEmpty() }.map { remote -> remote.toDevice() }
             }
             emit(result)
             delay(pollIntervalMs)

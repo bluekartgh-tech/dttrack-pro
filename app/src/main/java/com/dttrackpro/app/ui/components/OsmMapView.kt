@@ -45,7 +45,7 @@ fun OsmMapView(
             MapView(ctx).apply {
                 setTileSource(TileSourceFactory.MAPNIK)
                 setMultiTouchControls(true)
-                controller.setZoom(14.0)
+                controller.setZoom(15.0)
                 controller.setCenter(GeoPoint(19.076, 72.877))
                 minZoomLevel = 4.0
                 maxZoomLevel = 20.0

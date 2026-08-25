@@ -7,6 +7,7 @@ import com.dttrackpro.app.AppContainer
 import com.dttrackpro.app.data.model.Device
 import com.dttrackpro.app.data.model.Geofence
 import com.dttrackpro.app.data.model.TripPoint
+import com.dttrackpro.app.data.remote.GeocodingRepository
 import com.dttrackpro.app.ui.components.MapTileMode
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
@@ -42,6 +43,25 @@ class LiveTrackingViewModel(savedStateHandle: SavedStateHandle) : ViewModel() {
                 val found: Device? = devices.find { device -> device.id == deviceId }
                 if (found != null) {
                     _uiState.update { state -> state.copy(device = found) }
+                    if (found.data.address == null) {
+                        resolveAddress(found)
+                    }
+                }
+            }
+        }
+    }
+
+    private fun resolveAddress(device: Device) {
+        viewModelScope.launch {
+            val resolved = GeocodingRepository.reverseGeocode(device.data.lat, device.data.lng)
+            if (resolved != null) {
+                _uiState.update { state ->
+                    val current = state.device
+                    if (current != null && current.id == device.id) {
+                        state.copy(device = current.copy(data = current.data.copy(address = resolved)))
+                    } else {
+                        state
+                    }
                 }
             }
         }

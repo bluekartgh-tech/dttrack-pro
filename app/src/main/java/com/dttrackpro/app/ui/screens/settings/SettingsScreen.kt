@@ -17,6 +17,7 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.unit.dp
 import com.dttrackpro.app.AppContainer
 import com.dttrackpro.app.BuildConfig
+import com.dttrackpro.app.ui.components.DTTopBar
 import com.dttrackpro.app.ui.components.dtCard
 import com.dttrackpro.app.ui.theme.*
 import kotlinx.coroutines.launch
@@ -35,12 +36,12 @@ fun SettingsScreen(
         modifier = Modifier
             .fillMaxSize()
             .background(Graphite900)
-            .statusBarsPadding()
             .verticalScroll(rememberScrollState())
-            .padding(16.dp)
     ) {
-        Text("Settings", style = MaterialTheme.typography.headlineSmall, color = Cloud100)
-        Spacer(Modifier.height(20.dp))
+        DTTopBar(title = "Settings", onBellClick = onOpenNotificationSettings)
+
+        Column(modifier = Modifier.padding(16.dp)) {
+        Spacer(Modifier.height(4.dp))
 
         SectionLabel("Account")
         SettingsNavRow(Icons.Filled.Lock, "Change password", "Update your login credentials", onOpenChangePassword)
@@ -75,6 +76,7 @@ fun SettingsScreen(
         }
 
         Spacer(Modifier.height(24.dp))
+        }
     }
 }
 

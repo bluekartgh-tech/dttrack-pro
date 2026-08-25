@@ -4,9 +4,6 @@ import android.content.Intent
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.lazy.grid.GridCells
-import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
-import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.*
@@ -19,14 +16,15 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.dttrackpro.app.data.model.Device
 import com.dttrackpro.app.ui.components.MapTileMode
 import com.dttrackpro.app.ui.components.SingleVehicleMapView
 import com.dttrackpro.app.ui.components.StatusChip
+import com.dttrackpro.app.ui.components.dtCard
 import com.dttrackpro.app.ui.theme.*
 
 private data class QuickAction(val icon: ImageVector, val label: String, val active: Boolean, val onClick: () -> Unit)
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun LiveTrackingScreen(
     viewModel: LiveTrackingViewModel = viewModel(),
@@ -34,9 +32,6 @@ fun LiveTrackingScreen(
 ) {
     val state by viewModel.uiState.collectAsState()
     val context = LocalContext.current
-    val sheetState = rememberBottomSheetScaffoldState(
-        bottomSheetState = rememberStandardBottomSheetState(initialValue = SheetValue.PartiallyExpanded)
-    )
     var showCommandSheet by remember { mutableStateOf(false) }
     val snackbarHostState = remember { SnackbarHostState() }
 
@@ -47,34 +42,11 @@ fun LiveTrackingScreen(
         }
     }
 
-    BottomSheetScaffold(
-        scaffoldState = sheetState,
-        sheetPeekHeight = 220.dp,
-        sheetContainerColor = Graphite800,
-        sheetDragHandle = { BottomSheetDefaults.DragHandle(color = Graphite600) },
+    Scaffold(
+        containerColor = Graphite900,
         snackbarHost = { SnackbarHost(snackbarHostState) },
-        sheetContent = {
-            LiveTrackingSheetContent(
-                state = state,
-                onCommandsClick = { showCommandSheet = true },
-                onMapModeClick = viewModel::toggleTileMode,
-                onTrafficClick = { viewModel.toggleTraffic() },
-                onTrailClick = viewModel::toggleTrail,
-                onShareClick = {
-                    state.device?.let { d ->
-                        val url = "https://maps.google.com/?q=${d.data.lat},${d.data.lng}"
-                        val intent = Intent(Intent.ACTION_SEND).apply {
-                            type = "text/plain"
-                            putExtra(Intent.EXTRA_TEXT, "${d.name} — live location: $url")
-                        }
-                        context.startActivity(Intent.createChooser(intent, "Share location"))
-                    }
-                },
-                onGeofencesClick = viewModel::toggleGeofences,
-            )
-        }
-    ) { padding ->
-        Box(modifier = Modifier.fillMaxSize().padding(top = padding.calculateTopPadding())) {
+    ) { _ ->
+        Box(modifier = Modifier.fillMaxSize()) {
             SingleVehicleMapView(
                 device = state.device,
                 tileMode = state.tileMode,
@@ -110,6 +82,41 @@ fun LiveTrackingScreen(
                     )
                 }
             }
+
+            Column(
+                modifier = Modifier.align(Alignment.CenterEnd).padding(end = 12.dp),
+                verticalArrangement = Arrangement.spacedBy(8.dp),
+                horizontalAlignment = Alignment.CenterHorizontally,
+            ) {
+                val actions = listOf(
+                    QuickAction(Icons.Filled.Terminal, "Commands", false) { showCommandSheet = true },
+                    QuickAction(Icons.Filled.Layers, "Map mode", state.tileMode == MapTileMode.TOPOGRAPHIC, viewModel::toggleTileMode),
+                    QuickAction(Icons.Filled.Traffic, "Traffic", state.trafficOn, viewModel::toggleTraffic),
+                    QuickAction(Icons.Filled.Route, "Trail", state.trailOn, viewModel::toggleTrail),
+                    QuickAction(Icons.Filled.Share, "Share", false) {
+                        state.device?.let { d ->
+                            val url = "https://maps.google.com/?q=${d.data.lat},${d.data.lng}"
+                            val intent = Intent(Intent.ACTION_SEND).apply {
+                                type = "text/plain"
+                                putExtra(Intent.EXTRA_TEXT, "${d.name} — live location: $url")
+                            }
+                            context.startActivity(Intent.createChooser(intent, "Share location"))
+                        }
+                    },
+                    QuickAction(Icons.Filled.Map, "Geofences", state.geofencesOn, viewModel::toggleGeofences),
+                )
+                actions.forEach { action -> FloatingActionChip(action) }
+            }
+
+            Column(
+                modifier = Modifier
+                    .align(Alignment.BottomCenter)
+                    .fillMaxWidth()
+                    .navigationBarsPadding()
+                    .padding(12.dp)
+            ) {
+                VehicleInfoCard(device = state.device, isLoadingTrail = state.isLoadingTrail)
+            }
         }
     }
 
@@ -126,18 +133,46 @@ fun LiveTrackingScreen(
 }
 
 @Composable
-private fun LiveTrackingSheetContent(
-    state: LiveTrackingUiState,
-    onCommandsClick: () -> Unit,
-    onMapModeClick: () -> Unit,
-    onTrafficClick: () -> Unit,
-    onTrailClick: () -> Unit,
-    onShareClick: () -> Unit,
-    onGeofencesClick: () -> Unit,
-) {
-    val device = state.device
+private fun FloatingActionChip(action: QuickAction) {
+    Surface(
+        modifier = Modifier
+            .width(66.dp)
+            .clickable(onClick = action.onClick),
+        color = if (action.active) SignalCyan else Graphite800.copy(alpha = 0.92f),
+        shape = MaterialTheme.shapes.medium,
+        shadowElevation = 4.dp,
+    ) {
+        Column(
+            modifier = Modifier.padding(vertical = 10.dp, horizontal = 6.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+        ) {
+            Icon(
+                action.icon,
+                contentDescription = action.label,
+                tint = if (action.active) Graphite900 else SignalCyan,
+                modifier = Modifier.size(20.dp)
+            )
+            Spacer(Modifier.height(4.dp))
+            Text(
+                action.label,
+                style = MaterialTheme.typography.labelSmall,
+                color = if (action.active) Graphite900 else Slate300,
+                textAlign = TextAlign.Center,
+                maxLines = 1,
+            )
+        }
+    }
+}
 
-    Column(modifier = Modifier.padding(horizontal = 20.dp).padding(bottom = 24.dp)) {
+@OptIn(androidx.compose.foundation.layout.ExperimentalLayoutApi::class)
+@Composable
+private fun VehicleInfoCard(device: Device?, isLoadingTrail: Boolean) {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .dtCard(fill = Graphite800.copy(alpha = 0.96f))
+            .padding(16.dp)
+    ) {
         if (device == null) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 CircularProgressIndicator(modifier = Modifier.size(18.dp), color = SignalCyan, strokeWidth = 2.dp)
@@ -149,36 +184,38 @@ private fun LiveTrackingSheetContent(
 
         Row(verticalAlignment = Alignment.CenterVertically) {
             Column(modifier = Modifier.weight(1f)) {
-                Text(device.name, style = MaterialTheme.typography.headlineSmall, color = Cloud100)
+                Text(device.name, style = MaterialTheme.typography.titleMedium, color = Cloud100, maxLines = 1)
                 Spacer(Modifier.height(4.dp))
                 StatusChip(device.data.status)
             }
-            Column(horizontalAlignment = Alignment.End) {
-                Text("${device.data.speed.toInt()} km/h", style = MaterialTheme.typography.titleMedium, color = Cloud100)
-                Text(device.data.address ?: "—", style = MaterialTheme.typography.bodyMedium, color = Slate500)
-            }
+            Text("${device.data.speed.toInt()} km/h", style = MaterialTheme.typography.titleMedium, color = Cloud100)
         }
 
-        Spacer(Modifier.height(20.dp))
+        Spacer(Modifier.height(6.dp))
+        Text(
+            device.data.address ?: "Resolving address…",
+            style = MaterialTheme.typography.bodyMedium,
+            color = Slate500,
+            maxLines = 2,
+        )
 
-        LazyVerticalGrid(
-            columns = GridCells.Fixed(3),
-            horizontalArrangement = Arrangement.spacedBy(10.dp),
-            verticalArrangement = Arrangement.spacedBy(10.dp),
-            modifier = Modifier.heightIn(max = 260.dp)
-        ) {
-            val actions = listOf(
-                QuickAction(Icons.Filled.Terminal, "Commands", false, onCommandsClick),
-                QuickAction(Icons.Filled.Layers, if (state.tileMode == MapTileMode.STANDARD) "Standard" else "Topographic", state.tileMode == MapTileMode.TOPOGRAPHIC, onMapModeClick),
-                QuickAction(Icons.Filled.Traffic, "Traffic", state.trafficOn, onTrafficClick),
-                QuickAction(Icons.Filled.Route, "24h trail", state.trailOn, onTrailClick),
-                QuickAction(Icons.Filled.Share, "Share location", false, onShareClick),
-                QuickAction(Icons.Filled.Map, "Geofences", state.geofencesOn, onGeofencesClick),
-            )
-            items(actions) { action -> QuickActionButton(action) }
+        Spacer(Modifier.height(12.dp))
+
+        val params = device.data.params
+        val chips = buildList {
+            add(Triple(Icons.Filled.PowerSettingsNew, "Ignition", if (params.ignition) "On" else "Off"))
+            params.batteryLevel?.let { add(Triple(Icons.Filled.BatteryFull, "Battery", "$it%")) }
+            params.signalStrength?.let { add(Triple(Icons.Filled.SignalCellular4Bar, "Signal", it)) }
+            params.satelliteCount?.let { add(Triple(Icons.Filled.Satellite, "GPS", "$it sats")) }
+            params.powerVoltage?.let { add(Triple(Icons.Filled.Bolt, "Power", "$it V")) }
+            params.odometerKm?.let { add(Triple(Icons.Filled.Route, "Odometer", "${it.toInt()} km")) }
         }
 
-        if (state.isLoadingTrail) {
+        FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            chips.forEach { (icon, label, value) -> SensorChip(icon, label, value) }
+        }
+
+        if (isLoadingTrail) {
             Spacer(Modifier.height(10.dp))
             LinearProgressIndicator(modifier = Modifier.fillMaxWidth(), color = SignalCyan)
         }
@@ -186,21 +223,14 @@ private fun LiveTrackingSheetContent(
 }
 
 @Composable
-private fun QuickActionButton(action: QuickAction) {
-    Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .background(
-                if (action.active) SignalCyan.copy(alpha = 0.16f) else Graphite700,
-                MaterialTheme.shapes.medium
-            )
-            .clickable(onClick = action.onClick)
-            .padding(vertical = 14.dp),
-        horizontalAlignment = Alignment.CenterHorizontally
+private fun SensorChip(icon: ImageVector, label: String, value: String) {
+    Row(
+        modifier = Modifier.background(Graphite700, MaterialTheme.shapes.small).padding(horizontal = 10.dp, vertical = 6.dp),
+        verticalAlignment = Alignment.CenterVertically,
     ) {
-        Icon(action.icon, contentDescription = action.label, tint = if (action.active) SignalCyan else Slate300, modifier = Modifier.size(22.dp))
-        Spacer(Modifier.height(6.dp))
-        Text(action.label, style = MaterialTheme.typography.labelSmall, color = if (action.active) SignalCyan else Slate300, textAlign = TextAlign.Center)
+        Icon(icon, contentDescription = null, tint = SignalCyan, modifier = Modifier.size(14.dp))
+        Spacer(Modifier.width(6.dp))
+        Text("$label: $value", style = MaterialTheme.typography.labelSmall, color = Cloud100)
     }
 }
 

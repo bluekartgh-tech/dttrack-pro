@@ -36,7 +36,10 @@ data class DeviceParams(
     @SerializedName("fuel_level") val fuelLevel: Int? = null,
     @SerializedName("battery_level") val batteryLevel: Int? = null,
     @SerializedName("odometer") val odometerKm: Double? = null,
-    @SerializedName("engine_hours") val engineHours: Double? = null
+    @SerializedName("engine_hours") val engineHours: Double? = null,
+    @SerializedName("signal") val signalStrength: String? = null,
+    @SerializedName("power") val powerVoltage: String? = null,
+    @SerializedName("satellites") val satelliteCount: String? = null,
 )
 
 enum class DeviceStatus { MOVING, STOPPED, OFFLINE }

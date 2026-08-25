@@ -1,9 +1,11 @@
 package com.dttrackpro.app.ui.screens.vehicles
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ErrorOutline
 import androidx.compose.material.icons.filled.Search
@@ -12,6 +14,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import com.dttrackpro.app.ui.components.DTTopBar
 import com.dttrackpro.app.ui.components.DeviceListItem
 import com.dttrackpro.app.ui.components.dtCard
 import com.dttrackpro.app.ui.main.FleetFilter
@@ -22,14 +25,14 @@ import com.dttrackpro.app.ui.theme.*
 fun VehiclesScreen(
     fleetViewModel: FleetViewModel,
     onVehicleTapped: (Long) -> Unit,
+    onBellClick: () -> Unit,
 ) {
     val state by fleetViewModel.uiState.collectAsState()
 
     Column(modifier = Modifier.fillMaxSize().background(Graphite900)) {
-        Column(modifier = Modifier.padding(16.dp).statusBarsPadding()) {
-            Text("Vehicles", style = MaterialTheme.typography.headlineSmall, color = Cloud100)
-            Spacer(Modifier.height(12.dp))
+        DTTopBar(title = "Vehicles", onBellClick = onBellClick)
 
+        Column(modifier = Modifier.padding(horizontal = 16.dp)) {
             OutlinedTextField(
                 value = state.query,
                 onValueChange = fleetViewModel::onQueryChange,
@@ -49,17 +52,29 @@ fun VehiclesScreen(
 
             Spacer(Modifier.height(12.dp))
 
-            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            Row(
+                modifier = Modifier.horizontalScroll(rememberScrollState()),
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
                 FleetFilter.entries.forEach { filter ->
+                    val selected = state.filter == filter
                     FilterChip(
-                        selected = state.filter == filter,
+                        selected = selected,
                         onClick = { fleetViewModel.onFilterChange(filter) },
                         label = { Text("${filter.label()} (${state.counts[filter] ?: 0})") },
                         colors = FilterChipDefaults.filterChipColors(
-                            selectedContainerColor = SignalCyan.copy(alpha = 0.18f),
-                            selectedLabelColor = SignalCyan,
+                            selectedContainerColor = SignalCyan,
+                            selectedLabelColor = Graphite900,
                             containerColor = Graphite800,
                             labelColor = Slate300,
+                        ),
+                        border = FilterChipDefaults.filterChipBorder(
+                            enabled = true,
+                            selected = selected,
+                            borderColor = Graphite600,
+                            selectedBorderColor = SignalCyan,
+                            borderWidth = 1.dp,
+                            selectedBorderWidth = 1.dp,
                         )
                     )
                 }
@@ -67,6 +82,7 @@ fun VehiclesScreen(
         }
 
         if (state.errorMessage != null) {
+            Spacer(Modifier.height(12.dp))
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -83,7 +99,6 @@ fun VehiclesScreen(
                     Text(state.errorMessage ?: "", style = MaterialTheme.typography.bodyMedium, color = Slate300)
                 }
             }
-            Spacer(Modifier.height(12.dp))
         }
 
         if (state.isLoading) {
@@ -94,7 +109,7 @@ fun VehiclesScreen(
 
         LazyColumn(
             modifier = Modifier.fillMaxSize(),
-            contentPadding = PaddingValues(horizontal = 16.dp, vertical = 4.dp),
+            contentPadding = PaddingValues(horizontal = 16.dp, vertical = 12.dp),
             verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
             items(state.filteredDevices, key = { it.id }) { device ->

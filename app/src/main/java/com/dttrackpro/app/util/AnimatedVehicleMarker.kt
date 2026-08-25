@@ -2,7 +2,6 @@ package com.dttrackpro.app.util
 
 import android.graphics.Canvas
 import android.graphics.Paint
-import android.graphics.Path
 import android.graphics.RectF
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
@@ -13,15 +12,6 @@ import org.osmdroid.views.MapView
 import org.osmdroid.views.overlay.Overlay
 import kotlin.math.*
 
-/**
- * Draws one vehicle as a rotated chevron + status-colored halo, and smoothly
- * tweens both position and heading whenever a new GPS fix arrives — instead
- * of the marker "teleporting" every poll cycle like a naive implementation.
- *
- * This is the piece that gives DTTrack Pro its signature smooth-tracking
- * feel: call updateTarget() whenever fresh telemetry comes in, and the
- * overlay animates itself on the map's own draw loop.
- */
 class AnimatedVehicleMarker(
     val deviceId: Long,
     startPosition: GeoPoint,
@@ -31,7 +21,6 @@ class AnimatedVehicleMarker(
     private val glowColorProvider: () -> Int,
 ) : Overlay() {
 
-    // Animated (rendered) state
     var renderedPosition: GeoPoint = startPosition
         private set
     var renderedHeading: Float = startHeading
@@ -41,13 +30,21 @@ class AnimatedVehicleMarker(
     var selected: Boolean = false
 
     private val bodyPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply { style = Paint.Style.FILL }
+    private val outlinePaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+        style = Paint.Style.STROKE
+        strokeWidth = 2.2f
+        color = android.graphics.Color.argb(170, 8, 14, 22)
+    }
+    private val windshieldPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+        style = Paint.Style.FILL
+        color = android.graphics.Color.argb(150, 8, 14, 22)
+    }
     private val haloPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply { style = Paint.Style.FILL }
     private val ringPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
         style = Paint.Style.STROKE
         strokeWidth = 3f
     }
 
-    /** Kick off a smooth tween from the current rendered state to a new fix. */
     fun updateTarget(target: GeoPoint, targetHeading: Float, durationMs: Long = 2500L) {
         animJob?.cancel()
         val startPos = renderedPosition
@@ -90,16 +87,23 @@ class AnimatedVehicleMarker(
         canvas.save()
         canvas.rotate(renderedHeading, point.x.toFloat(), point.y.toFloat())
 
+        val px = point.x.toFloat()
+        val py = point.y.toFloat()
+        val halfLen = 15f
+        val halfWid = 8.5f
+        val bodyRadius = 6f
+
         bodyPaint.color = colorProvider()
-        val size = 16f
-        val chevron = Path().apply {
-            moveTo(point.x.toFloat(), point.y - size)
-            lineTo(point.x + size * 0.62f, point.y + size * 0.72f)
-            lineTo(point.x.toFloat(), point.y + size * 0.28f)
-            lineTo(point.x - size * 0.62f, point.y + size * 0.72f)
-            close()
-        }
-        canvas.drawPath(chevron, bodyPaint)
+        val bodyRect = RectF(px - halfWid, py - halfLen, px + halfWid, py + halfLen)
+        canvas.drawRoundRect(bodyRect, bodyRadius, bodyRadius, bodyPaint)
+        canvas.drawRoundRect(bodyRect, bodyRadius, bodyRadius, outlinePaint)
+
+        val windshieldRect = RectF(
+            px - halfWid * 0.55f, py - halfLen * 0.7f,
+            px + halfWid * 0.55f, py - halfLen * 0.1f
+        )
+        canvas.drawRoundRect(windshieldRect, 4f, 4f, windshieldPaint)
+
         canvas.restore()
     }
 

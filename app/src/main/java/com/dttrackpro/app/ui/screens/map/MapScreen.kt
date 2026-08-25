@@ -12,6 +12,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import com.dttrackpro.app.ui.components.DTFloatingTopBar
 import com.dttrackpro.app.ui.components.OsmMapView
 import com.dttrackpro.app.ui.main.FleetViewModel
 import com.dttrackpro.app.ui.theme.*
@@ -20,6 +21,7 @@ import com.dttrackpro.app.ui.theme.*
 fun MapScreen(
     fleetViewModel: FleetViewModel,
     onVehicleTapped: (Long) -> Unit,
+    onBellClick: () -> Unit,
 ) {
     val state by fleetViewModel.uiState.collectAsState()
 
@@ -32,20 +34,26 @@ fun MapScreen(
             modifier = Modifier.fillMaxSize(),
         )
 
-        Surface(
-            modifier = Modifier.align(Alignment.TopCenter).statusBarsPadding().padding(top = 12.dp),
-            color = Graphite800.copy(alpha = 0.92f),
-            shape = MaterialTheme.shapes.large,
-            shadowElevation = 6.dp,
-        ) {
-            Row(
-                modifier = Modifier.padding(horizontal = 16.dp, vertical = 10.dp),
-                horizontalArrangement = Arrangement.spacedBy(16.dp),
-                verticalAlignment = Alignment.CenterVertically,
+        Column(modifier = Modifier.align(Alignment.TopCenter).padding(top = 12.dp)) {
+            DTFloatingTopBar(title = "Map", onBellClick = onBellClick)
+
+            Spacer(Modifier.height(8.dp))
+
+            Surface(
+                modifier = Modifier.align(Alignment.CenterHorizontally),
+                color = Graphite800.copy(alpha = 0.92f),
+                shape = MaterialTheme.shapes.large,
+                shadowElevation = 6.dp,
             ) {
-                LegendDot(SignalCyan, "${state.counts[com.dttrackpro.app.ui.main.FleetFilter.MOVING] ?: 0} moving")
-                LegendDot(OnlineGreen, "${state.counts[com.dttrackpro.app.ui.main.FleetFilter.STOPPED] ?: 0} stopped")
-                LegendDot(OfflineGrey, "${state.counts[com.dttrackpro.app.ui.main.FleetFilter.OFFLINE] ?: 0} offline")
+                Row(
+                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 10.dp),
+                    horizontalArrangement = Arrangement.spacedBy(16.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    LegendDot(SignalCyan, "${state.counts[com.dttrackpro.app.ui.main.FleetFilter.MOVING] ?: 0} moving")
+                    LegendDot(OnlineGreen, "${state.counts[com.dttrackpro.app.ui.main.FleetFilter.STOPPED] ?: 0} stopped")
+                    LegendDot(OfflineGrey, "${state.counts[com.dttrackpro.app.ui.main.FleetFilter.OFFLINE] ?: 0} offline")
+                }
             }
         }
     }
