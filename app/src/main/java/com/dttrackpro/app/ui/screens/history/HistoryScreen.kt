@@ -53,6 +53,15 @@ fun HistoryScreen(
                 LinearProgressIndicator(modifier = Modifier.fillMaxWidth(), color = SignalCyan)
             }
 
+            state.errorMessage?.let { msg ->
+                Row(
+                    modifier = Modifier.fillMaxWidth().background(DangerCoral.copy(alpha = 0.12f)).padding(12.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    Text("Couldn't load history: $msg", style = MaterialTheme.typography.bodyMedium, color = Cloud100)
+                }
+            }
+
             PlaybackControls(state = state, viewModel = viewModel)
         }
     }

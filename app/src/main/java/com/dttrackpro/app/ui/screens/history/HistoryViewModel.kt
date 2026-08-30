@@ -12,6 +12,9 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
 
 data class HistoryUiState(
     val deviceId: Long = 0,
@@ -20,6 +23,7 @@ data class HistoryUiState(
     val isPlaying: Boolean = false,
     val playbackSpeed: Float = 1f,
     val isLoading: Boolean = true,
+    val errorMessage: String? = null,
 ) {
     val currentPoint: TripPoint? get() = points.getOrNull(playheadIndex)
 }
@@ -35,9 +39,19 @@ class HistoryViewModel(savedStateHandle: SavedStateHandle) : ViewModel() {
 
     init {
         viewModelScope.launch {
+            _uiState.update { it.copy(isLoading = true, errorMessage = null) }
             val hash = AppContainer.authRepository.sessionHash.firstOrNull() ?: "demo"
-            val points = AppContainer.deviceRepository.getHistory(hash, deviceId, "", "")
-            _uiState.update { it.copy(points = points, isLoading = false) }
+            val fmt = SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.US)
+            val end = Date()
+            val start = Date(end.time - 24L * 60 * 60 * 1000)
+            val result = runCatching {
+                AppContainer.deviceRepository.getHistory(hash, deviceId, fmt.format(start), fmt.format(end))
+            }
+            result.onSuccess { points ->
+                _uiState.update { it.copy(points = points, isLoading = false) }
+            }.onFailure { e ->
+                _uiState.update { it.copy(isLoading = false, errorMessage = e.message ?: "Could not load trip history") }
+            }
         }
     }
 

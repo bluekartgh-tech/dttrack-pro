@@ -6,8 +6,13 @@ sealed class Screen(val route: String) {
     data object LiveTracking : Screen("live_tracking/{deviceId}") {
         fun of(deviceId: Long) = "live_tracking/$deviceId"
     }
+    data object History : Screen("history/{deviceId}") {
+        fun of(deviceId: Long) = "history/$deviceId"
+    }
     data object Geofences : Screen("geofences")
     data object ChangePassword : Screen("change_password")
     data object NotificationSettings : Screen("notification_settings")
+    data object Notifications : Screen("notifications")
+    data object Reports : Screen("reports")
     data object VehicleManage : Screen("vehicle_manage")
 }

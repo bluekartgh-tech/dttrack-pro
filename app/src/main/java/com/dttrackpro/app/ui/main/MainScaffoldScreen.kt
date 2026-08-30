@@ -33,9 +33,11 @@ private enum class MainTab(val label: String, val icon: ImageVector) {
 fun MainScaffoldScreen(
     onVehicleTapped: (Long) -> Unit,
     onOpenChangePassword: () -> Unit,
+    onOpenNotifications: () -> Unit,
     onOpenNotificationSettings: () -> Unit,
     onOpenGeofences: () -> Unit,
     onOpenVehicleManage: () -> Unit,
+    onOpenReports: () -> Unit,
     onLoggedOut: () -> Unit,
 ) {
     val fleetViewModel: FleetViewModel = viewModel()
@@ -65,14 +67,16 @@ fun MainScaffoldScreen(
     ) { padding ->
         Box(modifier = Modifier.fillMaxSize().padding(bottom = padding.calculateBottomPadding())) {
             when (selectedTab) {
-                MainTab.VEHICLES -> VehiclesScreen(fleetViewModel = fleetViewModel, onVehicleTapped = onVehicleTapped, onBellClick = onOpenNotificationSettings)
-                MainTab.MAP -> MapScreen(fleetViewModel = fleetViewModel, onVehicleTapped = onVehicleTapped, onBellClick = onOpenNotificationSettings)
-                MainTab.DASHBOARD -> FleetDashboardScreen(fleetViewModel = fleetViewModel, onVehicleTapped = onVehicleTapped, onBellClick = onOpenNotificationSettings)
+                MainTab.VEHICLES -> VehiclesScreen(fleetViewModel = fleetViewModel, onVehicleTapped = onVehicleTapped, onBellClick = onOpenNotifications)
+                MainTab.MAP -> MapScreen(fleetViewModel = fleetViewModel, onVehicleTapped = onVehicleTapped, onBellClick = onOpenNotifications)
+                MainTab.DASHBOARD -> FleetDashboardScreen(fleetViewModel = fleetViewModel, onVehicleTapped = onVehicleTapped, onBellClick = onOpenNotifications)
                 MainTab.SETTINGS -> SettingsScreen(
                     onOpenChangePassword = onOpenChangePassword,
+                    onOpenNotifications = onOpenNotifications,
                     onOpenNotificationSettings = onOpenNotificationSettings,
                     onOpenGeofences = onOpenGeofences,
                     onOpenVehicleManage = onOpenVehicleManage,
+                    onOpenReports = onOpenReports,
                     onLoggedOut = onLoggedOut,
                 )
             }

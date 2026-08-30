@@ -25,9 +25,11 @@ import kotlinx.coroutines.launch
 @Composable
 fun SettingsScreen(
     onOpenChangePassword: () -> Unit,
+    onOpenNotifications: () -> Unit,
     onOpenNotificationSettings: () -> Unit,
     onOpenGeofences: () -> Unit,
     onOpenVehicleManage: () -> Unit,
+    onOpenReports: () -> Unit,
     onLoggedOut: () -> Unit,
 ) {
     val scope = rememberCoroutineScope()
@@ -38,7 +40,7 @@ fun SettingsScreen(
             .background(Graphite900)
             .verticalScroll(rememberScrollState())
     ) {
-        DTTopBar(title = "Settings", onBellClick = onOpenNotificationSettings)
+        DTTopBar(title = "Settings", onBellClick = onOpenNotifications)
 
         Column(modifier = Modifier.padding(16.dp)) {
         Spacer(Modifier.height(4.dp))
@@ -48,11 +50,13 @@ fun SettingsScreen(
 
         Spacer(Modifier.height(20.dp))
         SectionLabel("Fleet")
-        SettingsNavRow(Icons.Filled.Notifications, "Notifications", "Geofence, ignition, and offline alerts", onOpenNotificationSettings)
+        SettingsNavRow(Icons.Filled.Notifications, "Notification preferences", "Geofence, ignition, and offline alerts", onOpenNotificationSettings)
         Spacer(Modifier.height(8.dp))
         SettingsNavRow(Icons.Filled.Map, "Geofences", "Create and manage zones", onOpenGeofences)
         Spacer(Modifier.height(8.dp))
         SettingsNavRow(Icons.Filled.DirectionsCar, "Manage vehicles", "Rename vehicles and change icons", onOpenVehicleManage)
+        Spacer(Modifier.height(8.dp))
+        SettingsNavRow(Icons.Filled.BarChart, "Reports", "Distance and speed stats per vehicle", onOpenReports)
 
         Spacer(Modifier.height(20.dp))
         SectionLabel("System")

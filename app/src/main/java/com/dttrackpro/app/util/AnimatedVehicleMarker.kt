@@ -2,6 +2,7 @@ package com.dttrackpro.app.util
 
 import android.graphics.Canvas
 import android.graphics.Paint
+import android.graphics.Path
 import android.graphics.RectF
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
@@ -39,13 +40,14 @@ class AnimatedVehicleMarker(
         style = Paint.Style.FILL
         color = android.graphics.Color.argb(150, 8, 14, 22)
     }
+    private val headlightPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply { style = Paint.Style.FILL }
     private val haloPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply { style = Paint.Style.FILL }
     private val ringPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
         style = Paint.Style.STROKE
         strokeWidth = 3f
     }
 
-    fun updateTarget(target: GeoPoint, targetHeading: Float, durationMs: Long = 2500L) {
+    fun updateTarget(target: GeoPoint, targetHeading: Float, durationMs: Long = 4500L) {
         animJob?.cancel()
         val startPos = renderedPosition
         val startHead = renderedHeading
@@ -90,19 +92,33 @@ class AnimatedVehicleMarker(
         val px = point.x.toFloat()
         val py = point.y.toFloat()
         val halfLen = 15f
-        val halfWid = 8.5f
-        val bodyRadius = 6f
+        val noseWid = 6.5f
+        val rearWid = 8.5f
 
         bodyPaint.color = colorProvider()
-        val bodyRect = RectF(px - halfWid, py - halfLen, px + halfWid, py + halfLen)
-        canvas.drawRoundRect(bodyRect, bodyRadius, bodyRadius, bodyPaint)
-        canvas.drawRoundRect(bodyRect, bodyRadius, bodyRadius, outlinePaint)
+        val carPath = Path().apply {
+            moveTo(px, py - halfLen)
+            quadTo(px + noseWid, py - halfLen * 0.85f, px + noseWid * 1.15f, py - halfLen * 0.35f)
+            lineTo(px + rearWid, py + halfLen * 0.45f)
+            quadTo(px + rearWid, py + halfLen, px + rearWid * 0.6f, py + halfLen)
+            lineTo(px - rearWid * 0.6f, py + halfLen)
+            quadTo(px - rearWid, py + halfLen, px - rearWid, py + halfLen * 0.45f)
+            lineTo(px - noseWid * 1.15f, py - halfLen * 0.35f)
+            quadTo(px - noseWid, py - halfLen * 0.85f, px, py - halfLen)
+            close()
+        }
+        canvas.drawPath(carPath, bodyPaint)
+        canvas.drawPath(carPath, outlinePaint)
 
         val windshieldRect = RectF(
-            px - halfWid * 0.55f, py - halfLen * 0.7f,
-            px + halfWid * 0.55f, py - halfLen * 0.1f
+            px - noseWid * 0.85f, py - halfLen * 0.62f,
+            px + noseWid * 0.85f, py - halfLen * 0.05f
         )
         canvas.drawRoundRect(windshieldRect, 4f, 4f, windshieldPaint)
+
+        headlightPaint.color = android.graphics.Color.argb(220, 255, 255, 255)
+        canvas.drawCircle(px + noseWid * 0.55f, py - halfLen * 0.72f, 1.6f, headlightPaint)
+        canvas.drawCircle(px - noseWid * 0.55f, py - halfLen * 0.72f, 1.6f, headlightPaint)
 
         canvas.restore()
     }

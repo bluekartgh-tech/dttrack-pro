@@ -19,6 +19,9 @@ val AlertAmber = Color(0xFFFFB020)
 val DangerCoral = Color(0xFFFF5C5C)
 val OfflineGrey = Color(0xFF4A5B6C)
 
+val AccentViolet = Color(0xFF8B7CFF)
+val AccentBlue = Color(0xFF4EA1FF)
+
 val CardBorder = Color(0x1AFFFFFF)
 
 val SwitchTrackOff = Graphite600

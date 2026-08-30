@@ -13,6 +13,8 @@ import com.dttrackpro.app.data.model.Geofence
 import com.dttrackpro.app.data.model.TripPoint
 import com.dttrackpro.app.ui.theme.SignalCyan
 import com.dttrackpro.app.util.AnimatedVehicleMarker
+import kotlinx.coroutines.android.awaitFrame
+import kotlinx.coroutines.isActive
 import org.osmdroid.tileprovider.tilesource.TileSourceFactory
 import org.osmdroid.tileprovider.tilesource.XYTileSource
 import org.osmdroid.util.GeoPoint
@@ -35,6 +37,7 @@ fun SingleVehicleMapView(
     showTrail: Boolean,
     geofences: List<Geofence>,
     showGeofences: Boolean,
+    onVehicleTapped: () -> Unit = {},
     modifier: Modifier = Modifier,
 ) {
     val lifecycleOwner = LocalLifecycleOwner.current
@@ -53,6 +56,18 @@ fun SingleVehicleMapView(
                 setMultiTouchControls(true)
                 controller.setZoom(17.5)
                 overlays.add(trailOverlay)
+
+                setOnTouchListener { _, event ->
+                    if (event.actionMasked == android.view.MotionEvent.ACTION_UP) {
+                        marker.value?.let { m ->
+                            if (m.hitTest(this, event.x, event.y, tolerancePx = 60f)) {
+                                onVehicleTapped()
+                            }
+                        }
+                    }
+                    false
+                }
+
                 mapViewRef.value = this
             }
         },
@@ -76,7 +91,6 @@ fun SingleVehicleMapView(
                     mapView.controller.setCenter(point)
                 } else {
                     existing.updateTarget(point, d.data.course)
-                    mapView.controller.animateTo(existing.renderedPosition)
                 }
             }
 
@@ -102,6 +116,17 @@ fun SingleVehicleMapView(
             mapView.invalidate()
         }
     )
+
+    LaunchedEffect(Unit) {
+        while (isActive) {
+            val m = marker.value
+            val mv = mapViewRef.value
+            if (m != null && mv != null) {
+                mv.controller.setCenter(m.renderedPosition)
+            }
+            awaitFrame()
+        }
+    }
 
     DisposableEffect(lifecycleOwner) {
         val observer = LifecycleEventObserver { _, event ->

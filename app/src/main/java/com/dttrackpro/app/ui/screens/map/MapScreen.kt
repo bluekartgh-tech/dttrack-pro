@@ -3,6 +3,10 @@ package com.dttrackpro.app.ui.screens.map
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Notifications
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -12,7 +16,6 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import com.dttrackpro.app.ui.components.DTFloatingTopBar
 import com.dttrackpro.app.ui.components.OsmMapView
 import com.dttrackpro.app.ui.main.FleetViewModel
 import com.dttrackpro.app.ui.theme.*
@@ -34,36 +37,41 @@ fun MapScreen(
             modifier = Modifier.fillMaxSize(),
         )
 
-        Column(modifier = Modifier.align(Alignment.TopCenter).padding(top = 12.dp)) {
-            DTFloatingTopBar(title = "Map", onBellClick = onBellClick)
-
-            Spacer(Modifier.height(8.dp))
-
-            Surface(
-                modifier = Modifier.align(Alignment.CenterHorizontally),
-                color = Graphite800.copy(alpha = 0.92f),
-                shape = MaterialTheme.shapes.large,
-                shadowElevation = 6.dp,
+        Surface(
+            modifier = Modifier.align(Alignment.TopStart).statusBarsPadding().padding(12.dp),
+            color = Graphite900.copy(alpha = 0.9f),
+            shape = MaterialTheme.shapes.medium,
+            shadowElevation = 4.dp,
+        ) {
+            Row(
+                modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp),
+                horizontalArrangement = Arrangement.spacedBy(10.dp),
+                verticalAlignment = Alignment.CenterVertically,
             ) {
-                Row(
-                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 10.dp),
-                    horizontalArrangement = Arrangement.spacedBy(16.dp),
-                    verticalAlignment = Alignment.CenterVertically,
-                ) {
-                    LegendDot(SignalCyan, "${state.counts[com.dttrackpro.app.ui.main.FleetFilter.MOVING] ?: 0} moving")
-                    LegendDot(OnlineGreen, "${state.counts[com.dttrackpro.app.ui.main.FleetFilter.STOPPED] ?: 0} stopped")
-                    LegendDot(OfflineGrey, "${state.counts[com.dttrackpro.app.ui.main.FleetFilter.OFFLINE] ?: 0} offline")
-                }
+                LegendDot(SignalCyan, "${state.counts[com.dttrackpro.app.ui.main.FleetFilter.MOVING] ?: 0}")
+                LegendDot(OnlineGreen, "${state.counts[com.dttrackpro.app.ui.main.FleetFilter.STOPPED] ?: 0}")
+                LegendDot(OfflineGrey, "${state.counts[com.dttrackpro.app.ui.main.FleetFilter.OFFLINE] ?: 0}")
+            }
+        }
+
+        Surface(
+            modifier = Modifier.align(Alignment.TopEnd).statusBarsPadding().padding(12.dp),
+            color = Graphite900.copy(alpha = 0.9f),
+            shape = CircleShape,
+            shadowElevation = 4.dp,
+        ) {
+            IconButton(onClick = onBellClick, modifier = Modifier.size(40.dp)) {
+                Icon(Icons.Filled.Notifications, contentDescription = "Notifications", tint = SignalCyan, modifier = Modifier.size(18.dp))
             }
         }
     }
 }
 
 @Composable
-private fun LegendDot(color: androidx.compose.ui.graphics.Color, label: String) {
+private fun LegendDot(color: androidx.compose.ui.graphics.Color, count: String) {
     Row(verticalAlignment = Alignment.CenterVertically) {
-        Box(modifier = Modifier.size(8.dp).background(color, CircleShape))
-        Spacer(Modifier.width(6.dp))
-        Text(label, style = MaterialTheme.typography.labelSmall, color = Slate300)
+        Box(modifier = Modifier.size(7.dp).background(color, CircleShape))
+        Spacer(Modifier.width(5.dp))
+        Text(count, style = MaterialTheme.typography.labelSmall, color = Slate300)
     }
 }
